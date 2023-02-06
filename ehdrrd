@@ -1,0 +1,9 @@
+                child: Row(
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.all(5),
+                      child: CircleAvatar(
+                        backgroundImage: AssetImage('assets/images/demo1.jpg'),
+                        radius: 45,
+                      ),
+                    ),
