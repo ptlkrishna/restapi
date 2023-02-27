@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+void main()
+{
+  runApp( MaterialApp(
+    home: BuildingList()));
+}
+class BuildingList extends StatefulWidget {
+  @override
+  _BuildingListState createState() => _BuildingListState();
+}
+
+class _BuildingListState extends State<BuildingList> {
+  List<dynamic> buildingsList = []; // store the list of buildings
+  int page = 0; // store the current page number
+  int perPage = 11 ;// set the number of buildings to fetch per page
+  final scrollController_ =  ScrollController();
+  late double currentScrollPositionLimit;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBuildings(); // fetch the first page of buildings on app launch
+    scrollController_.addListener(() {
+      currentScrollPositionLimit = 90;
+      double r = currentScrollPositionLimit * page;
+      if (scrollController_.position.pixels > r) { // whatever you determine here
+        print('Fetching Page : $page');
+        fetchBuildings();
+      }
+    });
+  }
+
+  Future<void> fetchBuildings() async {
+    final client = http.Client();
+    final response = await client.post(Uri.http('192.168.1.11', 'eshop/building_list'),
+        body: {'page': '${page+1}', 'perPage': '$perPage'});
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      setState(() {
+        buildingsList.addAll(jsonData); // add the new buildings to the existing list
+        page++;
+      });
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Building List'),
+      ),
+      body: ListView.builder(
+        controller: scrollController_,
+        itemCount: buildingsList.length, // add 1 for loading indicator at the end
+        itemBuilder: (context, index) {
+          // if (index == buildingsList.length) {
+          //   return Center(
+          //     child: CircularProgressIndicator(), // show loading indicator at the end of the list
+          //   );
+          // } else {
+            final building = buildingsList[index];
+            return ListTile(
+              title: Text(building['name'],style: TextStyle(fontWeight: FontWeight.w700,fontSize: 18)),
+              subtitle: Text(building['city'],style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
+
+              // leading: Image.network(building['image']),
+            );
+          }
+        // },
+        // onEndReached: () {
+        //   fetchBuildings(); // fetch the next page of buildings when the list is scrolled to the end
+        // },
+      ),
+    );
+  }
+}
+
+
+// import "package:flutter/material.dart";
+// import "package:eshop2/api/list_of_buildings.dart";
+//
+// class BuildingList extends StatelessWidget {
+//   const BuildingList({Key? key}) : super(key: key);
+//   @override
+//   Widget build(BuildContext context) {
+//     return  MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: Scaffold(
+//         appBar: AppBar(
+//           title: const Text("Building List",
+//               style: TextStyle(
+//                   fontWeight: FontWeight.w700),
+//                   textAlign: TextAlign.center),
+//                   backgroundColor: Colors.orangeAccent,
+//         ),
+//           body: SingleChildScrollView(
+//             scrollDirection: Axis.vertical,
+//            padding: EdgeInsets.symmetric(horizontal: 10),
+//             child: Column(
+//                 children: [
+//                   const Text("A", style: TextStyle(fontWeight: FontWeight.w700,fontSize: 20,height: 3)),
+//                       ListView.builder(
+//                         physics: const NeverScrollableScrollPhysics(),
+//                         shrinkWrap: true,// <Loop starts
+//                         itemBuilder: (context, index) {
+//                         return Card(
+//                           shape: const OutlineInputBorder(
+//                           borderRadius: BorderRadius.all(Radius.circular(10)),borderSide: BorderSide.none),
+//                             child: Padding(
+//                               padding: const EdgeInsets.all(16),
+//                               child: ListTile(
+//                                 leading:Image.asset("assets/images/index.png",width: 60, height: 60),
+//                                 title: const Text(style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),"Building 1"),
+//                                 subtitle: const Text("SURAT",style:TextStyle(fontSize: 18,fontWeight:FontWeight.w500,color: Colors.orange )),
+//                               ),
+//                             ),
+//                         );
+//                         }, // <Loop ends
+//                   ),
+//
+//                 const Divider(),
+//                 const Text('B'),
+//                 const Divider(),
+//                 const Text('C'),
+//                 ],
+//               )
+//             ),
+//           ),
+//       );
+//
+//   }
+// }
